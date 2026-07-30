@@ -182,14 +182,8 @@ Mailpit(メール確認)：http://localhost:8025/
 | サロン | メールアドレス | パスワード | ユーザー名 |
 |---|---|---|---|
 | マツエクサロン | staff.eyelash.a@example.com | password | スタッフ マツエク A |
-| マツエクサロン | staff.eyelash.b@example.com | password | スタッフ マツエク B |
-| マツエクサロン | staff.eyelash.c@example.com | password | スタッフ マツエク C |
 | ネイルサロン | staff.nail.a@example.com | password | スタッフ ネイル A |
-| ネイルサロン | staff.nail.b@example.com | password | スタッフ ネイル B |
-| ネイルサロン | staff.nail.c@example.com | password | スタッフ ネイル C |
 | ヘアサロン | staff.hair.a@example.com | password | スタッフ ヘア A |
-| ヘアサロン | staff.hair.b@example.com | password | スタッフ ヘア B |
-| ヘアサロン | staff.hair.c@example.com | password | スタッフ ヘア C |
 
 ### お客様アカウント
 
