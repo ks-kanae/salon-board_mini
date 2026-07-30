@@ -60,7 +60,7 @@ export default function RegisterPage() {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-rose-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                             placeholder="山田 太郎"
                         />
                         {errors.name && (
@@ -77,7 +77,7 @@ export default function RegisterPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-rose-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                             placeholder="test@example.com"
                         />
                         {errors.email && (
@@ -94,7 +94,7 @@ export default function RegisterPage() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-rose-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                             placeholder="8文字以上"
                         />
                         {errors.password && (
@@ -111,7 +111,7 @@ export default function RegisterPage() {
                             type="password"
                             value={passwordConfirmation}
                             onChange={(e) => setPasswordConfirmation(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-rose-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                             placeholder="もう一度入力してください"
                         />
                     </div>
@@ -119,7 +119,7 @@ export default function RegisterPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+                        className="w-full bg-rose-400 text-white py-2 px-4 rounded-md hover:bg-rose-500 disabled:bg-rose-300 disabled:cursor-not-allowed transition-colors"
                     >
                         {isLoading ? "登録中..." : "登録する"}
                     </button>
@@ -127,7 +127,7 @@ export default function RegisterPage() {
 
                 <p className="mt-4 text-center text-sm text-gray-600">
                     すでにアカウントをお持ちの方は{" "}
-                    <a href="/login" className="text-blue-600 hover:underline">
+                    <a href="/login" className="text-indigo-400 hover:underline">
                         ログイン
                     </a>
                 </p>

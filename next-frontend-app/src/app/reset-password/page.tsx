@@ -63,7 +63,7 @@ function ResetPasswordForm() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-rose-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                         />
                         {errors.email && (
                             <p className="text-red-600 text-sm mt-1">{errors.email[0]}</p>
@@ -79,7 +79,7 @@ function ResetPasswordForm() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-rose-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                             placeholder="8文字以上"
                         />
                         {errors.password && (
@@ -96,14 +96,14 @@ function ResetPasswordForm() {
                             type="password"
                             value={passwordConfirmation}
                             onChange={(e) => setPasswordConfirmation(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-rose-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+                        className="w-full bg-rose-400 text-white py-2 px-4 rounded-md hover:bg-rose-500 disabled:bg-rose-300 disabled:cursor-not-allowed transition-colors"
                     >
                         {isLoading ? "更新中..." : "パスワードを更新する"}
                     </button>

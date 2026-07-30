@@ -37,17 +37,17 @@ export default function ForgotPasswordPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                <h1 className="text-2xl font-bold text-center mb-6">パスワードをお忘れの方</h1>
+                <h1 className="text-2xl font-bold text-center text-gray-400 mb-6">パスワードをお忘れの方</h1>
 
                 {message && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    <div className="bg-rose-100 border border-rose-400 text-rose-600 px-4 py-3 rounded mb-4">
                         <p>{message}</p>
                         <p className="mt-1 text-sm text-center">
 
                             <a href="http://localhost:8025"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="underline font-medium  text-blue-600"
+                            className="underline font-medium  text-indigo-400"
                             >
                                 メールを確認する
                             </a>
@@ -76,14 +76,14 @@ export default function ForgotPasswordPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+                        className="w-full bg-rose-400 text-white py-2 px-4 rounded-md hover:bg-rose-500 disabled:bg-rose-300 disabled:cursor-not-allowed transition-colors"
                     >
                         {isLoading ? "送信中..." : "リセットリンクを送信"}
                     </button>
                 </form>
 
                 <p className="mt-4 text-center text-sm text-gray-600">
-                    <a href="/login" className="text-blue-600 hover:underline">
+                    <a href="/login" className="text-rose-600 hover:underline">
                         ログインページに戻る
                     </a>
                 </p>

@@ -13,6 +13,9 @@ type User = {
     id: number;
     name: string;
     email: string;
+    role: 'customer' | 'staff';
+    phone: string | null;
+    salon_id: number | null;
 };
 
 type RegisterPayload = {

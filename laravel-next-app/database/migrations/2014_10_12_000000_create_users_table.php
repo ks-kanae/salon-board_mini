@@ -17,6 +17,14 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->enum('role', ['customer', 'staff'])->default('customer');
+            $table->string('phone', 20)->nullable();
+            $table->json('skills')->nullable();
+            $table->unsignedInteger('visit_count')->default(0);
+            $table->date('last_visited_at')->nullable();
+            $table->foreignId('salon_id')->nullable()->constrained('salons')->nullOnDelete();
+            $table->string('address')->nullable();
+            $table->text('memo')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

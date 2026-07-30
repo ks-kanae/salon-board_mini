@@ -1,29 +1,31 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
 import { AuthProvider } from "@/lib/auth-context";
+import { usePathname } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "ECサイト",
-  description: "Laravel + Next.js ECサイト",
-};
+function RootLayoutInner({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const isStaff = pathname.startsWith('/staff');
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="ja">
-      <body className={inter.className}>
-        <AuthProvider>
-          <Header />
-          <main>{children}</main>
-        </AuthProvider>
-      </body>
-    </html>
-  );
+    return (
+        <body className={inter.className}>
+            <AuthProvider>
+                {!isStaff && <Header />}
+                <main>{children}</main>
+            </AuthProvider>
+        </body>
+    );
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <html lang="ja">
+            <RootLayoutInner>{children}</RootLayoutInner>
+        </html>
+    );
 }

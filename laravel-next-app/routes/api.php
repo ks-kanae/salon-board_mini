@@ -1,180 +1,110 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use App\Http\Controllers\ProductController;
-use App\Models\User;
-use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\AvailabilityController;
+use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\SalonController;
+use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\StaffReservationController;
+use App\Http\Controllers\Api\StaffMemberController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\DailyClosingController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\SalonClosureController;
+use App\Http\Controllers\Api\ScheduleBlockController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+// 認証
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout']);
 
-Route::get('/products', [ProductController::class, 'index']);
+// パスワードリセット
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
+Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 
-// ユーザー登録
-Route::post('/register', function (Request $request) {
-    $validated = $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-        'password' => ['required', 'string', 'min:8', 'confirmed'],
-    ]);
+// ソーシャルログイン
+Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
+Route::get('/auth/github/redirect', [SocialAuthController::class, 'redirectToGithub']);
+Route::get('/auth/github/callback', [SocialAuthController::class, 'handleGithubCallback']);
 
-    $user = User::create([
-        'name' => $validated['name'],
-        'email' => $validated['email'],
-        'password' => bcrypt($validated['password']),
-    ]);
+// メニュー一覧（お客様・スタッフ共通）
+Route::get('/salons', [SalonController::class, 'index']);
+Route::get('/salons/{salon}/staff', [SalonController::class, 'staff']);
+Route::get('/salons/{salon}/closure', [SalonController::class, 'checkClosure']);
 
-    Auth::login($user);
-    $request->session()->regenerate();
+Route::get('/salons/{salon}/menus', [MenuController::class, 'index']);
 
-    return response()->json($user, 201);
-});
+// 認証済み共通
+Route::middleware('auth:sanctum')->group(function () {
 
+    // ユーザー情報
+    Route::get('/user', [AuthController::class, 'user']);
 
-/*ログイン*/
-Route::post("/login", function (Request $request) {
-    $credentials = $request->validate([
-        "email" => ["required", "email"],
-        "password" => ["required"],
-    ]);
+    // 空き時間確認
+    Route::get('/availability', [AvailabilityController::class, 'index']);
 
-    if (!Auth::attempt($credentials)) {
-        throw ValidationException::withMessages([
-            'email' => ['メールアドレスまたはパスワードが正しくありません。'],
-        ]);
-    }
+    // お客様専用
+    Route::get('/reservations', [ReservationController::class, 'index']);
+    Route::post('/reservations', [ReservationController::class, 'store']);
+    Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
+    Route::patch('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
 
-    $request->session()->regenerate();
+    // スタッフ専用
+    Route::prefix('staff')->group(function () {
+        Route::get('/members', [StaffMemberController::class, 'index']);
 
-    return response()->json(Auth::user());
-});
+        Route::get('/menus', [MenuController::class, 'indexAll']);
+        Route::post('/menus', [MenuController::class, 'store']);
+        Route::put('/menus/{menu}', [MenuController::class, 'update']);
+        Route::delete('/menus/{menu}', [MenuController::class, 'destroy']);
 
-// ログアウト
-Route::post("/logout", function (Request $request) {
-    Auth::guard("web")->logout();
+        Route::get('/reservations', [StaffReservationController::class, 'index']);
+        Route::post('/reservations', [StaffReservationController::class, 'store']);
+        Route::get('/reservations/unpaid-past', [StaffReservationController::class, 'unpaidPast']);
+        Route::put('/reservations/{reservation}/menus', [StaffReservationController::class, 'updateMenus']);
+        Route::patch('/reservations/{reservation}', [StaffReservationController::class, 'update']);
+        Route::delete('/reservations/{reservation}', [StaffReservationController::class, 'destroy']);
 
-    $request->session()->invalidate();
+        Route::patch('/members/{user}/skills', [StaffMemberController::class, 'updateSkills']);
 
-    $request->session()->regenerateToken();
+        Route::get('/reservations/{reservation}/payment', [PaymentController::class, 'show']);
+        Route::post('/reservations/{reservation}/payment/draft', [PaymentController::class, 'saveDraft']);
+        Route::post('/reservations/{reservation}/payment/confirm', [PaymentController::class, 'confirm']);
+        Route::delete('/reservations/{reservation}/payment', [PaymentController::class, 'cancel']);
 
-    return response()->noContent();
-});
+        Route::get('/shifts', [ShiftController::class, 'index']);
+        Route::post('/shifts', [ShiftController::class, 'upsert']);
 
-// 認証が必要なルート
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
 
-// パスワードリセットメールの送信
-Route::post('/forgot-password', function (Request $request) {
-    $request->validate(['email' => ['required', 'email']]);
+        Route::get('/closing', [DailyClosingController::class, 'show']);
+        Route::post('/closing', [DailyClosingController::class, 'store']);
+        Route::get('/closings', [DailyClosingController::class, 'index']);
+        Route::get('/sales-summary', [DailyClosingController::class, 'salesSummary']);
 
-    $status = Password::sendResetLink(
-        $request->only('email')
-    );
+        Route::get('/customers', [CustomerController::class, 'index']);
+        Route::get('/customers/{user}', [CustomerController::class, 'show']);
+        Route::patch('/customers/{user}', [CustomerController::class, 'update']);
 
-    if ($status === Password::RESET_LINK_SENT) {
-        return response()->json(['message' => __($status)]);
-    }
+        Route::get('/closures', [SalonClosureController::class, 'index']);
+        Route::patch('/closures/weekdays', [SalonClosureController::class, 'updateWeekdays']);
+        Route::post('/closures/toggle', [SalonClosureController::class, 'toggle']);
+        Route::post('/closures/bulk', [SalonClosureController::class, 'bulkSet']);
 
-    throw ValidationException::withMessages([
-        'email' => [__($status)],
-    ]);
-});
+        Route::get('/schedule-blocks', [ScheduleBlockController::class, 'index']);
+        Route::post('/schedule-blocks', [ScheduleBlockController::class, 'store']);
+        Route::patch('/schedule-blocks/{scheduleBlock}', [ScheduleBlockController::class, 'update']);
+        Route::delete('/schedule-blocks/{scheduleBlock}', [ScheduleBlockController::class, 'destroy']);
 
-// 新しいパスワードへの更新
-Route::post('/reset-password', function (Request $request) {
-    $request->validate([
-        'token' => ['required'],
-        'email' => ['required', 'email'],
-        'password' => ['required', 'string', 'min:8', 'confirmed'],
-    ]);
-
-    $status = Password::reset(
-        $request->only('email', 'password', 'password_confirmation', 'token'),
-        function ($user, $password) {
-            $user->forceFill([
-                'password' => Hash::make($password),
-            ])->setRememberToken(Str::random(60));
-
-            $user->save();
-
-            event(new PasswordReset($user));
-        }
-    );
-
-    if ($status === Password::PASSWORD_RESET) {
-        return response()->json(['message' => __($status)]);
-    }
-
-    throw ValidationException::withMessages([
-        'email' => [__($status)],
-    ]);
-});
-
-// Google
-Route::get('/auth/google/redirect', function () {
-    return Socialite::driver('google')->stateless()->redirect();
-});
-
-Route::get('/auth/google/callback', function (Request $request) {
-    try {
-        $googleUser = Socialite::driver('google')->stateless()->user();
-    } catch (\Exception $e) {
-        return redirect(env('FRONTEND_URL') . '/login?social=error');
-    }
-
-    $user = User::updateOrCreate(
-        ['email' => $googleUser->getEmail()],
-        [
-            'name' => $googleUser->getName(),
-            'password' => bcrypt(Str::random(24)),
-        ]
-    );
-
-    Auth::login($user);
-    $request->session()->regenerate();
-
-    return redirect(env('FRONTEND_URL') . '/?social=success');
-});
-
-// GitHub
-Route::get('/auth/github/redirect', function () {
-    return Socialite::driver('github')->stateless()->redirect();
-});
-
-Route::get('/auth/github/callback', function (Request $request) {
-    try {
-        $githubUser = Socialite::driver('github')->stateless()->user();
-    } catch (\Exception $e) {
-        return redirect(env('FRONTEND_URL') . '/login?social=error');
-    }
-
-    $user = User::updateOrCreate(
-        ['email' => $githubUser->getEmail()],
-        [
-            'name' => $githubUser->getName() ?? $githubUser->getNickname(),
-            'password' => bcrypt(Str::random(24)),
-        ]
-    );
-
-    Auth::login($user);
-    $request->session()->regenerate();
-
-    return redirect(env('FRONTEND_URL') . '/?social=success');
+        Route::get('/salon', [SalonController::class, 'currentStaffSalon']);
+        Route::patch('/salon/hours', [SalonController::class, 'updateHours']);
+    });
 });
