@@ -514,7 +514,7 @@ function StaffReservationsContent() {
                         staffList={staffList}
                         onClose={() => {
                             setReservations(prev => prev.map(r =>
-                                r.id === pendingChange.reservationId ? { ...r, start_at: pendingChange.originalStart, end_at: pendingChange.originalEnd } : r
+                                r.id === pendingChange.reservationId ? { ...r, start_at: pendingChange.originalStart, end_at: pendingChange.originalEnd, staff_id: pendingChange.originalStaffId,} : r,
                             ));
                             setPendingChange(null);
                         }}

@@ -20,6 +20,7 @@ class ReservationController extends Controller
         return response()->json(
             Reservation::with(['salon', 'menus', 'staff', 'payment'])
                 ->where('user_id', Auth::id())
+                ->where('type', 'online')
                 ->orderBy('start_at', 'desc')
                 ->get()
         );
@@ -89,6 +90,7 @@ class ReservationController extends Controller
     public function show(Reservation $reservation)
     {
         abort_if($reservation->user_id !== Auth::id(), 403, '権限がありません。');
+        abort_if($reservation->type !== 'online', 403, '権限がありません。');
 
         return response()->json($reservation->load(['salon', 'menus', 'staff', 'payment']));
     }
@@ -102,6 +104,10 @@ class ReservationController extends Controller
             return response()->json([
                 'message' => '当日のキャンセルはできません。サロンに直接ご連絡ください。'
             ], 422);
+        }
+
+        if ($reservation->type !== 'online') {
+            return response()->json(['message' => 'この予約はキャンセルできません。サロンに直接ご連絡ください。'], 403);
         }
 
         if ($reservation->status === 'cancelled') {

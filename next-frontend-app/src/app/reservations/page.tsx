@@ -68,6 +68,7 @@ export default function ReservationsPage() {
     const [salonDetail, setSalonDetail] = useState<Salon | null>(null);
     const [tab, setTab] = useState<Tab>('upcoming');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [showCancelSuccess, setShowCancelSuccess] = useState(false);
 
     useEffect(() => {
         if (!isLoading && (!user || user.role !== 'customer')) {
@@ -92,6 +93,7 @@ export default function ReservationsPage() {
             setReservations(prev =>
                 prev.map(r => r.id === cancelTarget ? { ...r, status: 'cancelled' } : r)
             );
+            setShowCancelSuccess(true);
         } catch (err: any) {
             setErrorMessage(err.response?.data?.message || "キャンセルに失敗しました。");
         } finally {
@@ -245,6 +247,22 @@ export default function ReservationsPage() {
                 </div>
             )}
 
+            {showCancelSuccess && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+                    <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center">
+                        <div className="text-4xl mb-3 text-rose-300">✓</div>
+                        <h2 className="text-lg font-bold text-gray-800 mb-2">予約をキャンセルしました</h2>
+                        <p className="text-gray-500 text-sm mb-6">またのご利用をお待ちしております。</p>
+                        <button
+                            onClick={() => setShowCancelSuccess(false)}
+                            className="w-full py-2 bg-rose-400 text-white rounded-lg hover:bg-rose-500"
+                        >
+                            閉じる
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* 店舗情報モーダル */}
             {salonDetail && (
                 <div
@@ -286,7 +304,7 @@ export default function ReservationsPage() {
             )}
 
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">予約一覧</h1>
+                <h1 className="text-2xl font-bold text-gray-800">ネット予約一覧</h1>
                 <Link
                     href="/"
                     className="bg-rose-400 text-white px-4 py-2 rounded-lg hover:bg-rose-500 transition-colors text-sm"
