@@ -173,7 +173,7 @@ function StaffReservationsContent() {
         try {
             const dateRes = await api.patch(
                 `/api/staff/reservations/${editingReservation!.id}`,
-                { start_at: startStr, end_at: endStr, is_nominated: editIsNominated, staff_id: editStaffId, type: editType, force }
+                { start_at: startStr, end_at: endStr, is_nominated: editIsNominated, staff_id: editStaffId,...(editingReservation!.type !== 'online' && { type: editType }), force }
             );
             setReservations(prev => prev.map(r =>
                 r.id === editingReservation!.id
@@ -281,11 +281,23 @@ function StaffReservationsContent() {
     };
 
     // ===== ドラッグハンドラ =====
+    const allRows = staffList;
+    const reservationsByStaff = (staffId: number) =>
+        reservations.filter(r => r.status !== 'cancelled' && r.staff_id === staffId);
+
+    const laneCountMap = new Map<number, number>();
+    staffList.forEach(staff => {
+        const rowReservations = reservationsByStaff(staff.id);
+        const laneMap = calcLanes(rowReservations);
+        const laneCount = Math.max(1, new Set(laneMap.values()).size);
+        laneCountMap.set(staff.id, laneCount);
+    });
     const { didDrag, onReservationDragStart, onBlockMoveDragStart, onBlockResizeDragStart } = useReservationDrag({
         openHour,
         closeHour,
         staffList,
         tableRef,
+        laneCountMap,
         setReservations,
         setScheduleBlocks,
         setPendingChange,
@@ -294,9 +306,6 @@ function StaffReservationsContent() {
         setBlockError,
     });
 
-    const allRows = staffList;
-    const reservationsByStaff = (staffId: number) =>
-        reservations.filter(r => r.status !== 'cancelled' && r.staff_id === staffId);
     const totalWidth = TIME_LABEL_WIDTH + CELL_WIDTH * totalSlots;
 
     return (
@@ -576,7 +585,15 @@ function StaffReservationsContent() {
                     <ConflictWarningModal
                         message={conflictWarning}
                         saving={saving}
-                        onClose={() => { setConflictWarning(null); setPendingSave(null); }}
+                        onClose={() => {
+                            setReservations(prev => prev.map(r =>
+                                r.id === pendingSave.reservationId
+                                    ? { ...r, start_at: editingReservation?.start_at ?? r.start_at, end_at: editingReservation?.end_at ?? r.end_at }
+                                    : r
+                            ));
+                            setConflictWarning(null);
+                            setPendingSave(null);
+                        }}
                         onForce={async () => {
                             setSaving(true);
                             try {

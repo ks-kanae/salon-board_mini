@@ -77,7 +77,7 @@ export type StaffReservation = {
 
 export type ScheduleBlock = {
     id: number;
-    staff_id: number;
+    staff_id: number | null
     title: string;
     start_at: string;
     end_at: string;

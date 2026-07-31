@@ -47,29 +47,30 @@ type Props = {
     setBlockSuccessMessage: (v: string) => void;
     setShowBlockMoveSuccess: (v: boolean) => void;
     setBlockError: (v: string | null) => void;
+    laneCountMap: Map<number, number>;
 };
 
 export function useReservationDrag({
     openHour, closeHour, staffList, tableRef,
     setReservations, setScheduleBlocks,
     setPendingChange, setBlockSuccessMessage,
-    setShowBlockMoveSuccess, setBlockError,
+    setShowBlockMoveSuccess, setBlockError, laneCountMap,
 }: Props) {
     const didDrag = useRef(false);
     const dragStartX = useRef(0);
     const dragState = useRef<DragState | null>(null);
 
     // Y座標からスタッフを特定
-    const getStaffFromY = (clientY: number): number | null => {
+        const getStaffFromY = (clientY: number): number | null => {
         if (!tableRef.current) return null;
         const tableRect = tableRef.current.getBoundingClientRect();
-        // ヘッダー行(40px)を除いた相対Y座標
         const relY = clientY - tableRect.top - 40;
         if (relY < 0) return null;
 
         let accumulatedHeight = 0;
         for (const staff of staffList) {
-            const rowHeight = ROW_HEIGHT; // 簡易版：レーン数を考慮しない
+            const laneCount = laneCountMap.get(staff.id) ?? 1;
+            const rowHeight = ROW_HEIGHT * laneCount;
             if (relY < accumulatedHeight + rowHeight) {
                 return staff.id;
             }
@@ -111,8 +112,7 @@ export function useReservationDrag({
 
         const onMouseMove = (e: MouseEvent) => {
             if (!dragState.current) return;
-            if (Math.abs(e.clientX - dragStartX.current) > 5) didDrag.current = true;
-
+            if (Math.abs(e.clientX - dragStartX.current) > 5 || Math.abs(e.clientY - dragState.current.startY) > 5) didDrag.current = true;
             const dx = e.clientX - dragState.current.startX;
             const minDiff = Math.round(dx / CELL_WIDTH) * 30;
 
@@ -161,7 +161,6 @@ export function useReservationDrag({
             const orig = dragState.current;
             dragState.current = null;
             if (!didDrag.current) return;
-
             const timeUnchanged =
                 new Date(orig.originalStart).getTime() === new Date(orig.currentStart).getTime() &&
                 new Date(orig.originalEnd).getTime() === new Date(orig.currentEnd).getTime();
@@ -216,7 +215,7 @@ export function useReservationDrag({
 
         const onMouseMove = (e: MouseEvent) => {
             if (!dragState.current) return;
-            if (Math.abs(e.clientX - dragStartX.current) > 5) didDrag.current = true;
+            if (Math.abs(e.clientX - dragStartX.current) > 5 || Math.abs(e.clientY - dragState.current.startY) > 5) didDrag.current = true;
             const dx = e.clientX - dragState.current.startX;
             const minDiff = Math.round(dx / CELL_WIDTH) * 30;
             const newStart = new Date(new Date(dragState.current.originalStart).getTime() + minDiff * 60000);
@@ -224,16 +223,12 @@ export function useReservationDrag({
             const startHour = newStart.getUTCHours() + 9 + newStart.getUTCMinutes() / 60;
             const endHour   = newEnd.getUTCHours() + 9 + newEnd.getUTCMinutes() / 60;
             if (startHour < openHour || endHour > closeHour) return;
-
-            // Y座標からスタッフを特定して追加
             const hoveredStaffId = getStaffFromY(e.clientY);
-
             dragState.current.currentStart = toJstStr(newStart);
             dragState.current.currentEnd   = toJstStr(newEnd);
             if (hoveredStaffId !== null) {
                 dragState.current.currentStaffId = hoveredStaffId;
             }
-
             setScheduleBlocks(prev => prev.map(sb =>
                 sb.id === b.id ? {
                     ...sb,
@@ -257,7 +252,7 @@ export function useReservationDrag({
             })
                 .then(() => { setBlockSuccessMessage('予定を変更しました'); setShowBlockMoveSuccess(true); setTimeout(() => setShowBlockMoveSuccess(false), 1000); })
                 .catch((err: any) => {
-                    setScheduleBlocks(prev => prev.map(sb => sb.id === b.id ? { ...sb, start_at: orig.originalStart, end_at: orig.originalEnd, staff_id: orig.originalStaffId } : sb));
+                    setScheduleBlocks(prev => prev.map(sb => sb.id === b.id ? { ...sb, start_at: orig.originalStart, end_at: orig.originalEnd, staff_id: orig.originalStaffId ?? sb.staff_id } : sb));
                     setBlockError(err.response?.data?.message || 'この時間帯には予約または予定が入っています。');
                 });
         };
@@ -299,7 +294,7 @@ export function useReservationDrag({
 
         const onMouseMove = (e: MouseEvent) => {
             if (!dragState.current) return;
-            if (Math.abs(e.clientX - dragStartX.current) > 5) didDrag.current = true;
+            if (Math.abs(e.clientX - dragStartX.current) > 5 || Math.abs(e.clientY - dragState.current.startY) > 5) didDrag.current = true;
             const minDiff = Math.round((e.clientX - dragState.current.startX) / CELL_WIDTH) * 30;
             const newEnd = new Date(new Date(dragState.current.originalEnd).getTime() + minDiff * 60000);
             const endHour = newEnd.getUTCHours() + 9 + newEnd.getUTCMinutes() / 60;
