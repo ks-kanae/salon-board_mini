@@ -88,7 +88,7 @@ function StaffReservationsContent() {
     const [pendingSave, setPendingSave] = useState<{ startStr: string; endStr: string; menuRes: any; reservationId: number } | null>(null);
     const [editError, setEditError] = useState<string | null>(null);
     const [dragError, setDragError] = useState<string | null>(null);
-    const [dragConflict, setDragConflict] = useState<{ newStart: string; newEnd: string; reservationId: number; status: string } | null>(null);
+    const [dragConflict, setDragConflict] = useState<{ newStart: string; newEnd: string; newStaffId: number | null; reservationId: number; status: string; originalStart: string; originalEnd: string; originalStaffId: number | null; } | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const [editStaffId, setEditStaffId] = useState<number | null>(null);
     const [editType, setEditType] = useState<'online' | 'manual' | 'next'>('manual');
@@ -546,7 +546,7 @@ function StaffReservationsContent() {
                                     r.id === pendingChange.reservationId ? { ...r, start_at: pendingChange.originalStart, end_at: pendingChange.originalEnd } : r
                                 ));
                                 if (err.response?.data?.conflict) {
-                                    setDragConflict({ newStart: pendingChange.newStart, newEnd: pendingChange.newEnd, reservationId: pendingChange.reservationId, status: reservations.find(r => r.id === pendingChange.reservationId)?.status ?? 'confirmed' });
+                                    setDragConflict({ newStart: pendingChange.newStart, newEnd: pendingChange.newEnd, newStaffId: pendingChange.newStaffId, reservationId: pendingChange.reservationId, status: reservations.find(r => r.id === pendingChange.reservationId)?.status ?? 'confirmed', originalStart: pendingChange.originalStart, originalEnd: pendingChange.originalEnd, originalStaffId: pendingChange.originalStaffId });
                                 } else {
                                     setDragError(err.response?.data?.message || '変更に失敗しました。');
                                 }
@@ -557,13 +557,33 @@ function StaffReservationsContent() {
 
                 {dragConflict && (
                     <DragConflictModal
-                        onClose={() => setDragConflict(null)}
+                        onClose={() => {
+                            setReservations(prev => prev.map(r =>
+                                r.id === dragConflict.reservationId
+                                    ? {
+                                        ...r,
+                                        start_at: dragConflict.originalStart,
+                                        end_at: dragConflict.originalEnd,
+                                        staff_id: dragConflict.originalStaffId,
+                                    }
+                                    : r
+                            ));
+                            setDragConflict(null);
+                        }}
                         onForce={async () => {
                             try {
                                 const res = await api.patch(`/api/staff/reservations/${dragConflict.reservationId}`, {
-                                    status: dragConflict.status, start_at: dragConflict.newStart, end_at: dragConflict.newEnd, force: true,
+                                    status: dragConflict.status,
+                                    start_at: dragConflict.newStart,
+                                    end_at: dragConflict.newEnd,
+                                    staff_id: dragConflict.newStaffId,
+                                    force: true,
                                 });
-                                setReservations(prev => prev.map(r => r.id === dragConflict.reservationId ? { ...r, start_at: res.data.start_at, end_at: res.data.end_at } : r));
+                                setReservations(prev => prev.map(r =>
+                                    r.id === dragConflict.reservationId
+                                        ? { ...r, start_at: res.data.start_at, end_at: res.data.end_at, staff_id: res.data.staff_id }
+                                        : r
+                                ));
                             } catch { setDragError('変更に失敗しました。'); }
                             finally { setDragConflict(null); }
                         }}
